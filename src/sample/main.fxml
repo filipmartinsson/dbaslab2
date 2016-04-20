@@ -1,13 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <Button layoutX="331.0" layoutY="98.0" mnemonicParsing="false" text="Button" />
-      <TextField layoutX="133.0" layoutY="98.0" />
+      <Button layoutX="238.0" layoutY="61.0" mnemonicParsing="false" text="Submit" />
+      <TextField layoutX="63.0" layoutY="61.0" />
+      <ChoiceBox layoutX="63.0" layoutY="126.0" prefHeight="27.0" prefWidth="167.0" />
+      <ChoiceBox layoutX="63.0" layoutY="184.0" prefHeight="27.0" prefWidth="167.0" />
+      <Label layoutX="63.0" layoutY="38.0" text="Student ID" />
+      <Label layoutX="63.0" layoutY="109.0" text="Course" />
+      <Label layoutX="63.0" layoutY="167.0" text="Group" />
+      <Label layoutX="63.0" layoutY="233.0" text="Recitation" />
+      <ChoiceBox layoutX="63.0" layoutY="250.0" prefHeight="27.0" prefWidth="167.0" />
+      <Label layoutX="336.0" layoutY="38.0" text="Problems" />
+      <ListView layoutX="336.0" layoutY="58.0" prefHeight="291.0" prefWidth="222.0" />
+      <Button layoutX="63.0" layoutY="322.0" mnemonicParsing="false" prefHeight="27.0" prefWidth="245.0" text="Submit" />
    </children>
 </AnchorPane>

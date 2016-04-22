@@ -56,38 +56,46 @@ public class Controller {
         courseBox.getSelectionModel().selectedIndexProperty()
                 .addListener(new ChangeListener<Number>() {
                     public void changed(ObservableValue ov, Number value, Number new_value) {
-                        getGroups(observableCourses.get((Integer)new_value));
+                        if (observableCourses.size() > 0){
+                            getGroups(observableCourses.get((Integer)new_value));
+                        }
                     }
                 });
 
         recitationBox.getSelectionModel().selectedIndexProperty()
                 .addListener(new ChangeListener<Number>() {
                     public void changed(ObservableValue ov, Number value, Number new_value) {
-                        String cid = ((Course)courseBox.getSelectionModel().getSelectedItem()).id;
-                        int recid = (Integer)new_value;
-                        try{
-                            Connection conn = null;
-                            String url = "jdbc:postgresql://localhost:5432/lab2";
+                        if(observableRecitations.size() > 0){
+                            String cid = ((Course)courseBox.getSelectionModel().getSelectedItem()).id;
+                            int recid = observableRecitations.get((Integer)new_value);
+                            System.out.println(recid);
+                            try{
+                                Connection conn = null;
+                                String url = "jdbc:postgresql://localhost:5432/lab2";
 
-                            // get the postgresql database connection
-                            conn = DriverManager.getConnection(url,"postgres", "password");
-                            PreparedStatement st = conn.prepareStatement("SELECT DISTINCT id FROM recitations WHERE courseid = ? AND recitationid = ?");
-                            st.setString(1, cid);
-                            st.setInt(2, recid);
-                            ResultSet rs = st.executeQuery();
-                            courseBox.setDisable(false);
-                            while ( rs.next() )
-                            {
-                                getProblems(rs.getString("id"));
+                                // get the postgresql database connection
+                                conn = DriverManager.getConnection(url,"postgres", "password");
+                                PreparedStatement st = conn.prepareStatement("SELECT DISTINCT id FROM recitations WHERE courseid = ? AND recitationid = ?");
+                                st.setString(1, cid);
+                                st.setInt(2, recid);
+                                ResultSet rs = st.executeQuery();
+                                courseBox.setDisable(false);
+                                while ( rs.next() )
+                                {
+                                    System.out.println("CHANGE REC");
+                                    getProblems(rs.getString("id"));
+                                }
+                                rs.close();
+                                st.close();
+
                             }
-                            rs.close();
-                            st.close();
+                            catch (Exception e){
+                                e.printStackTrace();
+                                System.exit(2);
+                            }
+                        }
 
-                        }
-                        catch (Exception e){
-                            e.printStackTrace();
-                            System.exit(2);
-                        }
+
                     }
                 });
 
@@ -140,6 +148,9 @@ public class Controller {
             observableGroups.clear();
             observableRecitations.clear();
             observableCourses.clear();
+            groupBox.setDisable(true);
+            recitationBox.setDisable(true);
+            courseBox.setDisable(true);
             Connection conn = null;
             String url = "jdbc:postgresql://localhost:5432/lab2";
 
@@ -256,11 +267,15 @@ public class Controller {
             st.setString(1, c.id);
             rs = st.executeQuery();
             recitationBox.setDisable(false);
+            if (!rs.next()){
+
+            }
             while ( rs.next() )
             {
                 int id = Integer.parseInt(rs.getString("recitationid"));
                 observableRecitations.add(id);
             }
+
 
             rs.close();
             st.close();

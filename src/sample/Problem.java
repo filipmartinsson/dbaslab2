@@ -4,17 +4,17 @@ package sample;
  * Created by administrator on 22/04/16.
  */
 public class Problem {
-    public String problemid;
-    public String masterproblemid;
+    public int problemid;
+    public int masterproblemid;
 
-    public Problem(String id, String name){
+    public Problem(int id, int name){
         this.problemid = problemid;
         this.masterproblemid = masterproblemid;
     }
-    public String toStringProblem(){
+    public int getProblem(){
         return this.problemid;
     }
-    public String toStringMasterProblem(){
+    public int getMasterProblem(){
         return this.masterproblemid;
     }
 }

@@ -5,12 +5,10 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 
 import java.sql.*;
 
@@ -33,15 +31,14 @@ public class Controller {
     @FXML
     ChoiceBox recitationBox;
     @FXML
+    ListView problemView;
+    @FXML
     Button submitButton;
 
     private ObservableList<Course> observableCourses = FXCollections.observableArrayList();
     private ObservableList<Integer> observableGroups = FXCollections.observableArrayList();
     private ObservableList<Integer> observableRecitations = FXCollections.observableArrayList();
-    @FXML
-    ListView problemView;
-
-    ObservableList<String> problems = FXCollections.observableArrayList();
+    private ObservableList<String> problems = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
@@ -164,7 +161,7 @@ public class Controller {
     public void getProblems(String id){
         try{
             Connection conn = null;
-            ArrayList<Problem> list = new ArrayList<Problem>();
+            ArrayList<Problem> rawList = new ArrayList<Problem>();
             String url = "jdbc:postgresql://localhost:5432/lab2";
 
             // get the postgresql database connection
@@ -174,15 +171,44 @@ public class Controller {
             ResultSet rs = st.executeQuery();
             while ( rs.next() )
             {
-                list.add(new Problem(rs.getString("problemid"), rs.getString("masterproblemid")));
-                System.out.println(rs.getString("problemid"+" "+"masterproblemid"));
+                int mid;
+                try{
+                    mid = rs.getInt("masterproblemid");
+                }catch (Exception e){
+                    mid=0;
+                }
+                rawList.add(new Problem(rs.getInt("problemid"), mid));
+//                System.out.println(rs.getString("problemid"+" "+"masterproblemid"));
             }
             rs.close();
             st.close();
 
-            problems.add(rs.getString("problemid"));
+            for (int i = 0; i < rawList.size(); i++) {
+                int pid = rawList.get(i).getProblem();
+                problems.add(String.valueOf(rawList.get(i).getProblem()));
+                for (int i2 = 0; i2 < rawList.size(); i2++) {
+                    if(pid==rawList.get(i2).getMasterProblem()){
+                        problems.add("      " + String.valueOf(rawList.get(i2).getMasterProblem()));
+                    }
+                }
+            }
             problemView.setItems(problems);
 
+            problemView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
+            problemView.setOnMouseClicked(new EventHandler<Event>() {
+
+                @Override
+                public void handle(Event event) {
+                    ObservableList<String> selectedItems =  problemView.getSelectionModel().getSelectedItems();
+
+                    for(String s : selectedItems){
+                        System.out.println("selected item " + s);
+                    }
+
+                }
+
+            });
 
         }
         catch (Exception e){

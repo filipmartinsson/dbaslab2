@@ -63,34 +63,41 @@ public class Controller {
                     }
                 });
 
+        recitationBox.getSelectionModel().selectedIndexProperty()
+                .addListener(new ChangeListener<Number>() {
+                    public void changed(ObservableValue ov, Number value, Number new_value) {
+                        String cid = ((Course)courseBox.getSelectionModel().getSelectedItem()).id;
+                        int recid = (Integer)new_value;
+                        try{
+                            Connection conn = null;
+                            String url = "jdbc:postgresql://localhost:5432/lab2";
+
+                            // get the postgresql database connection
+                            conn = DriverManager.getConnection(url,"postgres", "password");
+                            PreparedStatement st = conn.prepareStatement("SELECT DISTINCT id FROM recitations WHERE courseid = ? AND recitationid = ?");
+                            st.setString(1, cid);
+                            st.setInt(2, recid);
+                            ResultSet rs = st.executeQuery();
+                            courseBox.setDisable(false);
+                            while ( rs.next() )
+                            {
+                                getProblems(rs.getString("id"));
+                            }
+                            rs.close();
+                            st.close();
+
+                        }
+                        catch (Exception e){
+                            e.printStackTrace();
+                            System.exit(2);
+                        }
+                    }
+                });
+
         submitButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                String cid = ((Course)courseBox.getSelectionModel().getSelectedItem()).id;
-                String recid = recitationBox.getSelectionModel().getSelectedItem().toString();
-                try{
-                    Connection conn = null;
-                    String url = "jdbc:postgresql://localhost:5432/lab2";
-
-                    // get the postgresql database connection
-                    conn = DriverManager.getConnection(url,"postgres", "password");
-                    PreparedStatement st = conn.prepareStatement("SELECT DISTINCT id FROM recitations WHERE courseid = ? AND recitationid = ?");
-                    st.setString(1, cid);
-                    st.setInt(2, Integer.parseInt(recid));
-                    ResultSet rs = st.executeQuery();
-                    courseBox.setDisable(false);
-                    while ( rs.next() )
-                    {
-                        getProblems(rs.getString("id"));
-                    }
-                    rs.close();
-                    st.close();
-
-                }
-                catch (Exception e){
-                    e.printStackTrace();
-                    System.exit(2);
-                }
+                System.out.println("SUBMIT, BITCH");
 
             }
         });
@@ -133,9 +140,9 @@ public class Controller {
 
     public void getUser(String id){
         try{
-//            observableCourses.removeAll();
-//            observableGroups.removeAll();
-//            observableRecitations.removeAll();
+            observableGroups.clear();
+            observableRecitations.clear();
+            observableCourses.clear();
             Connection conn = null;
             String url = "jdbc:postgresql://localhost:5432/lab2";
 
@@ -162,6 +169,7 @@ public class Controller {
     }
 
     public void getProblems(String id){
+
         try{
             Connection conn = null;
             ArrayList<Problem> list = new ArrayList<Problem>();
@@ -195,7 +203,8 @@ public class Controller {
 
 
     public void getGroups(Course c){
-
+        observableGroups.clear();
+        observableRecitations.clear();
         try{
 //            observableGroups.removeAll();
 //            observableRecitations.removeAll();

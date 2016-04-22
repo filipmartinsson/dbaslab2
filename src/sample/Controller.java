@@ -9,6 +9,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 
 import java.sql.*;
@@ -35,6 +36,10 @@ public class Controller {
     private ObservableList<Course> observableCourses = FXCollections.observableArrayList();
     private ObservableList<Integer> observableGroups = FXCollections.observableArrayList();
     private ObservableList<Integer> observableRecitations = FXCollections.observableArrayList();
+    @FXML
+    ListView problemView;
+
+    ObservableList<String> problems = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
@@ -112,6 +117,38 @@ public class Controller {
             }
             rs.close();
             st.close();
+
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            System.exit(2);
+        }
+
+    }
+
+    public void getProblems(String id){
+        try{
+            Connection conn = null;
+            ArrayList<Problem> list = new ArrayList<Problem>();
+            String url = "jdbc:postgresql://localhost:5432/lab2";
+
+            // get the postgresql database connection
+            conn = DriverManager.getConnection(url,"postgres", "password");
+            PreparedStatement st = conn.prepareStatement("SELECT DISTINCT problems.problemid, problems.masterproblemid FROM problems WHERE recitationid = ?");
+            st.setInt(1, Integer.parseInt(id));
+            ResultSet rs = st.executeQuery();
+            while ( rs.next() )
+            {
+                list.add(new Problem(rs.getString("problemid"), rs.getString("masterproblemid")));
+                System.out.println(rs.getString("problemid"+" "+"masterproblemid"));
+            }
+            rs.close();
+            st.close();
+
+            problems.add(rs.getString("problemid"));
+            problemView.setItems(problems);
+
+
         }
         catch (Exception e){
             e.printStackTrace();

@@ -7,7 +7,7 @@ public class Problem {
     public int problemid;
     public int masterproblemid;
 
-    public Problem(int id, int name){
+    public Problem(int problemid, int masterproblemid){
         this.problemid = problemid;
         this.masterproblemid = masterproblemid;
     }

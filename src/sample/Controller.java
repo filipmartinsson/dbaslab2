@@ -196,18 +196,19 @@ public class Controller {
                 }catch (Exception e){
                     mid=0;
                 }
+                System.out.println(String.valueOf(rs.getInt("problemid")));
                 rawList.add(new Problem(rs.getInt("problemid"), mid));
-//                System.out.println(rs.getString("problemid"+" "+"masterproblemid"));
             }
             rs.close();
             st.close();
 
             for (int i = 0; i < rawList.size(); i++) {
                 int pid = rawList.get(i).getProblem();
-                problems.add(String.valueOf(rawList.get(i).getProblem()));
+                System.out.println(pid);
+                problems.add(String.valueOf(pid));
                 for (int i2 = 0; i2 < rawList.size(); i2++) {
                     if(pid==rawList.get(i2).getMasterProblem()){
-                        problems.add("      " + String.valueOf(rawList.get(i2).getMasterProblem()));
+                        problems.add("      " + String.valueOf(rawList.get(i2).getProblem()));
                     }
                 }
             }

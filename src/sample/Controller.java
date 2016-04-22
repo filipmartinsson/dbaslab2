@@ -32,6 +32,8 @@ public class Controller {
     ChoiceBox groupBox;
     @FXML
     ChoiceBox recitationBox;
+    @FXML
+    Button submitButton;
 
     private ObservableList<Course> observableCourses = FXCollections.observableArrayList();
     private ObservableList<Integer> observableGroups = FXCollections.observableArrayList();
@@ -60,7 +62,40 @@ public class Controller {
                         getGroups(observableCourses.get((Integer)new_value));
                     }
                 });
-        //courseBox.setConverter(new CourseConverter());
+
+        submitButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                String cid = ((Course)courseBox.getSelectionModel().getSelectedItem()).id;
+                String recid = recitationBox.getSelectionModel().getSelectedItem().toString();
+                try{
+                    Connection conn = null;
+                    String url = "jdbc:postgresql://localhost:5432/lab2";
+
+                    // get the postgresql database connection
+                    conn = DriverManager.getConnection(url,"postgres", "password");
+                    PreparedStatement st = conn.prepareStatement("SELECT DISTINCT id FROM recitations WHERE courseid = ? AND recitationid = ?");
+                    st.setString(1, cid);
+                    st.setInt(2, Integer.parseInt(recid));
+                    ResultSet rs = st.executeQuery();
+                    courseBox.setDisable(false);
+                    while ( rs.next() )
+                    {
+                        getProblems(rs.getString("id"));
+                    }
+                    rs.close();
+                    st.close();
+
+                }
+                catch (Exception e){
+                    e.printStackTrace();
+                    System.exit(2);
+                }
+
+            }
+        });
+
+
 
         try
         {
@@ -97,10 +132,10 @@ public class Controller {
     }
 
     public void getUser(String id){
-        observableCourses = FXCollections.observableArrayList();
-        observableGroups = FXCollections.observableArrayList();
-        observableRecitations = FXCollections.observableArrayList();
         try{
+//            observableCourses.removeAll();
+//            observableGroups.removeAll();
+//            observableRecitations.removeAll();
             Connection conn = null;
             String url = "jdbc:postgresql://localhost:5432/lab2";
 
@@ -157,10 +192,13 @@ public class Controller {
 
     }
 
+
+
     public void getGroups(Course c){
-        observableGroups = FXCollections.observableArrayList();
-        observableRecitations = FXCollections.observableArrayList();
+
         try{
+//            observableGroups.removeAll();
+//            observableRecitations.removeAll();
             Connection conn = null;
             String url = "jdbc:postgresql://localhost:5432/lab2";
 

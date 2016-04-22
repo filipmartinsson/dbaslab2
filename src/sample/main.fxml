@@ -12,7 +12,7 @@
    <children>
       <Button fx:id="idButton" layoutX="238.0" layoutY="61.0" mnemonicParsing="false" text="Submit" />
       <TextField fx:id="idField" layoutX="63.0" layoutY="61.0" />
-      <ChoiceBox layoutX="63.0" layoutY="126.0" prefHeight="27.0" prefWidth="167.0" />
+      <ChoiceBox fx:id="courseBox" layoutX="63.0" layoutY="126.0" prefHeight="27.0" prefWidth="167.0" />
       <ChoiceBox layoutX="63.0" layoutY="184.0" prefHeight="27.0" prefWidth="167.0" />
       <Label layoutX="63.0" layoutY="38.0" text="Student ID" />
       <Label layoutX="63.0" layoutY="109.0" text="Course" />

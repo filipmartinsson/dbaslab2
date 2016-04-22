@@ -1,9 +1,12 @@
 package sample;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextField;
 
 import java.sql.*;
@@ -20,9 +23,12 @@ public class Controller {
     Button idButton;
     @FXML
     TextField idField;
+    @FXML
+    ChoiceBox courseBox;
 
     @FXML
     public void initialize() {
+        ObservableList<String> choices = FXCollections.observableArrayList();
         Connection conn = null;
         System.out.println("HHHHHH");
         try

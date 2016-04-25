@@ -1,5 +1,7 @@
 package sample;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -9,6 +11,8 @@ import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.CheckBoxListCell;
+import javafx.util.Callback;
 
 import java.sql.*;
 
@@ -31,17 +35,39 @@ public class Controller {
     @FXML
     ChoiceBox recitationBox;
     @FXML
-    ListView problemView;
+    ListView<Problem> problemView;
     @FXML
     Button submitButton;
 
     private ObservableList<Course> observableCourses = FXCollections.observableArrayList();
     private ObservableList<Integer> observableGroups = FXCollections.observableArrayList();
     private ObservableList<Integer> observableRecitations = FXCollections.observableArrayList();
-    private ObservableList<String> problems = FXCollections.observableArrayList();
+    private ObservableList<Problem> problems = FXCollections.observableArrayList();
+    private ArrayList<Problem> solvedProblems = new ArrayList<Problem>();
 
     @FXML
     public void initialize() {
+
+        problemView.setCellFactory(new Callback<ListView<Problem>, ListCell<Problem>>(){
+
+            @Override
+            public ListCell<Problem> call(ListView<Problem> p) {
+
+                ListCell<Problem> cell = new ListCell<Problem>(){
+
+
+                    protected void updateItem(Problem t, boolean bln) {
+                        super.updateItem(t, bln);
+                        if (t != null) {
+                            setText(t.toString());
+                        }
+                    }
+
+                };
+
+                return cell;
+            }
+        });
 
         Connection conn = null;
         courseBox.setDisable(true);
@@ -70,23 +96,11 @@ public class Controller {
                             int recid = observableRecitations.get((Integer)new_value);
                             System.out.println(recid);
                             try{
-                                Connection conn = null;
-                                String url = "jdbc:postgresql://localhost:5432/lab2";
 
-                                // get the postgresql database connection
-                                conn = DriverManager.getConnection(url,"postgres", "password");
-                                PreparedStatement st = conn.prepareStatement("SELECT DISTINCT id FROM recitations WHERE courseid = ? AND recitationid = ?");
-                                st.setString(1, cid);
-                                st.setInt(2, recid);
-                                ResultSet rs = st.executeQuery();
+
                                 courseBox.setDisable(false);
-                                while ( rs.next() )
-                                {
-                                    System.out.println("CHANGE REC");
-                                    getProblems(rs.getString("id"));
-                                }
-                                rs.close();
-                                st.close();
+                                getProblems(recid, cid);
+
 
                             }
                             catch (Exception e){
@@ -143,6 +157,8 @@ public class Controller {
         }
     }
 
+
+
     public void getUser(String id){
         try{
             observableGroups.clear();
@@ -176,7 +192,7 @@ public class Controller {
 
     }
 
-    public void getProblems(String id){
+    public void getProblems(int rid, String cid){
 
         try{
             Connection conn = null;
@@ -185,8 +201,9 @@ public class Controller {
 
             // get the postgresql database connection
             conn = DriverManager.getConnection(url,"postgres", "password");
-            PreparedStatement st = conn.prepareStatement("SELECT DISTINCT problems.problemid, problems.masterproblemid FROM problems WHERE recitationid = ?");
-            st.setInt(1, Integer.parseInt(id));
+            PreparedStatement st = conn.prepareStatement("SELECT DISTINCT id,problems.problemid, problems.masterproblemid FROM problems WHERE recitationid = ? AND courseid = ?");
+            st.setInt(1, rid);
+            st.setString(2, cid);
             ResultSet rs = st.executeQuery();
             while ( rs.next() )
             {
@@ -197,18 +214,21 @@ public class Controller {
                     mid=0;
                 }
                 System.out.println(String.valueOf(rs.getInt("problemid")));
-                rawList.add(new Problem(rs.getInt("problemid"), mid));
+                rawList.add(new Problem(rs.getInt("id"),rs.getInt("problemid"), mid, cid));
             }
             rs.close();
             st.close();
 
             for (int i = 0; i < rawList.size(); i++) {
-                int pid = rawList.get(i).getProblem();
+                int pid = rawList.get(i).getProblemId();
+                int uid = rawList.get(i).getUId();
+                String courseId = rawList.get(i).getCourseId();
+
                 System.out.println(pid);
                 problems.add(String.valueOf(pid));
                 for (int i2 = 0; i2 < rawList.size(); i2++) {
                     if(pid==rawList.get(i2).getMasterProblem()){
-                        problems.add("      " + String.valueOf(rawList.get(i2).getProblem()));
+                        problems.add("      " + String.valueOf(rawList.get(i2).getProblemId()));
                     }
                 }
             }
@@ -220,10 +240,10 @@ public class Controller {
 
                 @Override
                 public void handle(Event event) {
-                    ObservableList<String> selectedItems =  problemView.getSelectionModel().getSelectedItems();
+                    ObservableList<Problem> selectedItems =  problemView.getSelectionModel().getSelectedItems();
 
-                    for(String s : selectedItems){
-                        System.out.println("selected item " + s);
+                    for(Problem s : selectedItems){
+                        System.out.println("selected item " + s.getUId());
                     }
 
                 }

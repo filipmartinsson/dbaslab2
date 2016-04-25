@@ -23,4 +23,13 @@ public class Problem {
     public int getMasterProblem(){
         return this.masterproblemid;
     }
+    public String toString(){
+        if(masterproblemid != -1){
+            return String.valueOf(problemid);
+        }
+        else{
+            return "        " + String.valueOf(problemid);
+        }
+
+    }
 }

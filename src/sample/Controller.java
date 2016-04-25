@@ -48,7 +48,6 @@ public class Controller {
     @FXML
     public void initialize() {
 
-        problems.add(new Problem(1, 2, -1, "aa" ));
 
         problemView.setCellFactory(CheckBoxListCell.forListView(new Callback<Problem, ObservableValue<Boolean>>() {
             @Override
@@ -62,7 +61,6 @@ public class Controller {
         }));
 
 
-        problemView.setItems(problems);
 
         Connection conn = null;
         courseBox.setDisable(true);
@@ -190,60 +188,64 @@ public class Controller {
     public void getProblems(int rid, String cid){
 
         try{
-//            Connection conn = null;
-//            ArrayList<Problem> rawList = new ArrayList<Problem>();
-//            String url = "jdbc:postgresql://localhost:5432/lab2";
-//
-//            // get the postgresql database connection
-//            conn = DriverManager.getConnection(url,"postgres", "password");
-//            PreparedStatement st = conn.prepareStatement("SELECT DISTINCT id,problems.problemid, problems.masterproblemid FROM problems WHERE recitationid = ? AND courseid = ?");
-//            st.setInt(1, rid);
-//            st.setString(2, cid);
-//            ResultSet rs = st.executeQuery();
-//            while ( rs.next() )
-//            {
-//                int mid;
-//                try{
-//                    mid = rs.getInt("masterproblemid");
-//                }catch (Exception e){
-//                    mid=0;
-//                }
-//                System.out.println(String.valueOf(rs.getInt("problemid")));
-//                rawList.add(new Problem(rs.getInt("id"),rs.getInt("problemid"), mid, cid));
-//            }
-//            rs.close();
-//            st.close();
-//
-//            for (int i = 0; i < rawList.size(); i++) {
-//                int pid = rawList.get(i).getProblemId();
-//                int uid = rawList.get(i).getUId();
-//                String courseId = rawList.get(i).getCourseId();
-//
-//                System.out.println(pid);
-//                problems.add(String.valueOf(pid));
-//                for (int i2 = 0; i2 < rawList.size(); i2++) {
-//                    if(pid==rawList.get(i2).getMasterProblem()){
-//                        problems.add("      " + String.valueOf(rawList.get(i2).getProblemId()));
-//                    }
-//                }
-//            }
-//            problemView.setItems(problems);
-//
-//            problemView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-//
-//            problemView.setOnMouseClicked(new EventHandler<Event>() {
-//
-//                @Override
-//                public void handle(Event event) {
-//                    ObservableList<Problem> selectedItems =  problemView.getSelectionModel().getSelectedItems();
-//
-//                    for(Problem s : selectedItems){
-//                        System.out.println("selected item " + s.getUId());
-//                    }
-//
-//                }
-//
-//            });
+            Connection conn = null;
+            ArrayList<Problem> rawList = new ArrayList<Problem>();
+            String url = "jdbc:postgresql://localhost:5432/lab2";
+
+            // get the postgresql database connection
+            conn = DriverManager.getConnection(url,"postgres", "password");
+            PreparedStatement st = conn.prepareStatement("SELECT DISTINCT id,problems.problemid, problems.masterproblemid FROM problems WHERE recitationid = ? AND courseid = ?");
+            st.setInt(1, rid);
+            st.setString(2, cid);
+            ResultSet rs = st.executeQuery();
+            while ( rs.next() )
+            {
+                int mid;
+                try{
+                    mid = rs.getInt("masterproblemid");
+                }catch (Exception e){
+                    mid=-1;
+                }
+                System.out.println(String.valueOf(rs.getInt("problemid")));
+                rawList.add(new Problem(rs.getInt("id"),rs.getInt("problemid"), mid, cid, rid));
+            }
+            rs.close();
+            st.close();
+
+
+            Collections.sort(rawList);
+
+            for (int i = 0; i < rawList.size(); i++) {
+                int pid = rawList.get(i).getProblemId();
+                int uid = rawList.get(i).getUId();
+                String courseId = rawList.get(i).getCourseId();
+
+                System.out.println(pid);
+                problems.add(rawList.get(i));
+                for (int i2 = 0; i2 < rawList.size(); i2++) {
+                    if(pid==rawList.get(i2).getMasterProblem()){
+                        problems.add(rawList.get(i2));
+                    }
+                }
+            }
+
+            problemView.setItems(problems);
+
+            problemView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
+            problemView.setOnMouseClicked(new EventHandler<Event>() {
+
+                @Override
+                public void handle(Event event) {
+                    ObservableList<Problem> selectedItems =  problemView.getSelectionModel().getSelectedItems();
+
+                    for(Problem s : selectedItems){
+                        System.out.println("selected item " + s.getUId());
+                    }
+
+                }
+
+            });
 
         }
         catch (Exception e){

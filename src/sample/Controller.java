@@ -19,7 +19,6 @@ import java.sql.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.*;
 import java.util.*;
 
 public class Controller {
@@ -44,10 +43,12 @@ public class Controller {
     private ObservableList<Integer> observableRecitations = FXCollections.observableArrayList();
     private ObservableList<Problem> problems = FXCollections.observableArrayList();
     private ArrayList<Problem> solvedProblems = new ArrayList<Problem>();
+    private ArrayList<Integer> alreadySolvedProblemUIds = new ArrayList<>();
 
     private int studentid;
     private int recitationid;
-    private int groupid =0;
+    private int groupid;
+    private boolean shouldTrackBeWritten;
 
     @FXML
     public void initialize() {
@@ -57,8 +58,8 @@ public class Controller {
             @Override
             public ObservableValue<Boolean> call(Problem item) {
                 BooleanProperty observable = new SimpleBooleanProperty();
-                observable.addListener((obs, wasSelected, isNowSelected) ->
-                        System.out.println("Check box for "+item.toString()+" changed from "+wasSelected+" to "+isNowSelected)
+                observable.addListener((obs, wasSelected, isNowSelected) -> problemChecked(item, wasSelected, isNowSelected)
+                        //System.out.println("Check box for "+item.toString()+" changed from "+wasSelected+" to "+isNowSelected)
                 );
                 return observable ;
             }
@@ -70,17 +71,40 @@ public class Controller {
         courseBox.setDisable(true);
         courseBox.setItems(observableCourses);
 
+        problemView.setDisable(true);
+
         groupBox.setDisable(true);
         groupBox.setItems(observableGroups);
 
         recitationBox.setDisable(true);
         recitationBox.setItems(observableRecitations);
 
+        groupBox.getSelectionModel().selectedIndexProperty()
+                .addListener(new ChangeListener<Number>() {
+                    public void changed(ObservableValue ov, Number value, Number new_value) {
+                        groupid = (Integer) new_value+1;
+                        groupBox.setDisable(true);
+                        problemView.setDisable(false);
+                        solvedProblems.clear();
+                    }
+                });
+
+        recitationBox.getSelectionModel().selectedIndexProperty()
+                .addListener(new ChangeListener<Number>() {
+                    public void changed(ObservableValue ov, Number value, Number new_value) {
+                        problems.clear();
+                        problemView.setDisable(true);
+
+                    }
+                });
         courseBox.getSelectionModel().selectedIndexProperty()
                 .addListener(new ChangeListener<Number>() {
                     public void changed(ObservableValue ov, Number value, Number new_value) {
                         if (observableCourses.size() > 0){
-                            getGroups(observableCourses.get((Integer)new_value));
+                            getRecitations(observableCourses.get((Integer)new_value));
+
+                            problemView.setDisable(true);
+
                         }
                     }
                 });
@@ -94,7 +118,7 @@ public class Controller {
                             System.out.println(recid);
                             try{
 
-
+                                getGroups((Course)courseBox.getSelectionModel().getSelectedItem(), recid, studentid);
                                 courseBox.setDisable(false);
                                 getProblems(recid, cid);
 
@@ -118,17 +142,27 @@ public class Controller {
                     Connection conn = null;
                     String url = "jdbc:postgresql://localhost:5432/lab2";
 
-                    // get the postgresql database connection
+                    // FINDS THE ALREADY SOLVED PROBLEMS FOR THE STUDENT AND PUTS THEM IN ALREADYSOLVEDPROBLEMIDS ARRAYLIST
                     conn = DriverManager.getConnection(url,"postgres", "password");
-                    PreparedStatement st1 = conn.prepareStatement("INSERT INTO tracks VALUES(? , ?, ?)");
+                    PreparedStatement st = conn.prepareStatement("SELECT problemid FROM solved WHERE studentid = ?");
+                    st.setInt(1, studentid);
+                    ResultSet rs = st.executeQuery();
+                    while(rs.next()){
+                        alreadySolvedProblemUIds.add(rs.getInt("problemid"));
+                    }
 
-                    st1.setInt(1, studentid);
-                    st1.setInt(2, recitationid);
-                    st1.setInt(3, groupid);
+                    if(shouldTrackBeWritten) {
+                        // get the postgresql database connection
+                        PreparedStatement st1 = conn.prepareStatement("INSERT INTO tracks VALUES(? , ?, ?)");
 
-                    ResultSet rs1 = st1.executeQuery();
-                    rs1.close();
-                    st1.close();
+                        st1.setInt(1, studentid);
+                        st1.setInt(2, recitationid);
+                        st1.setInt(3, groupid);
+
+                        st1.executeUpdate();
+                        System.out.println(st1.getMetaData());
+                        st1.close();
+                    }
 
                     //Loop with problems over SolvedProblems
                     for (int i = 0; i < solvedProblems.size(); i++) {
@@ -136,17 +170,19 @@ public class Controller {
                         int unid = solvedProblems.get(i).getUId();
 
                         try{
-                            // get the postgresql database connection
-                            conn = DriverManager.getConnection(url,"postgres", "password");
+                            if(!alreadySolvedProblemUIds.contains(unid)){ //If the problem is not already solved. Otherwise we will have database primary key not unique error
 
-                            PreparedStatement st2 = conn.prepareStatement("INSERT INTO solved VALUES(?, ?)");
-                            st2.setInt(1, unid); //unid or probid???
-                            st2.setInt(2, studentid);
+                                conn = DriverManager.getConnection(url,"postgres", "password");
 
-                            ResultSet rs2 = st2.executeQuery();
-                            //ignore results...
-                            rs2.close();
-                            st2.close();
+                                PreparedStatement st2 = conn.prepareStatement("INSERT INTO solved VALUES(?, ?)");
+                                st2.setInt(1, unid); //unid or probid???
+                                st2.setInt(2, studentid);
+
+                                st2.executeUpdate();
+                                //ignore results...
+                                st2.close();
+                            }
+
                         }
                         catch (Exception e){
                             e.printStackTrace();
@@ -185,7 +221,7 @@ public class Controller {
             idButton.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
                 public void handle(ActionEvent event) {
-                    System.out.println(idField.getText());
+                    studentid=Integer.parseInt(idField.getText());
                     getUser(idField.getText());
 
                 }
@@ -205,12 +241,22 @@ public class Controller {
         }
     }
 
-
+    public void problemChecked(Problem p, boolean wasSelected, boolean isSelected){
+        if(isSelected){
+            solvedProblems.add(p);
+        }
+        else if(wasSelected && !isSelected){
+            solvedProblems.remove(p);
+        }
+        System.out.println(solvedProblems.size());
+    }
 
     public void getUser(String id){
         try{
             observableGroups.clear();
             observableRecitations.clear();
+            problems.clear();
+
             observableCourses.clear();
             groupBox.setDisable(true);
             recitationBox.setDisable(true);
@@ -242,15 +288,13 @@ public class Controller {
 
     public void getProblems(int rid, String cid){
 
-        recitationid=rid;
 
         try{
             Connection conn = null;
             ArrayList<Problem> rawList = new ArrayList<Problem>();
             String url = "jdbc:postgresql://localhost:5432/lab2";
-
-            // get the postgresql database connection
             conn = DriverManager.getConnection(url,"postgres", "password");
+
             PreparedStatement st = conn.prepareStatement("SELECT DISTINCT id,problems.problemid, problems.masterproblemid FROM problems WHERE recitationid = ? AND courseid = ?");
             st.setInt(1, rid);
             st.setString(2, cid);
@@ -265,6 +309,7 @@ public class Controller {
                 }
                 System.out.println(String.valueOf(rs.getInt("problemid")));
                 rawList.add(new Problem(rs.getInt("id"),rs.getInt("problemid"), mid, cid, rid));
+
             }
             rs.close();
             st.close();
@@ -312,23 +357,30 @@ public class Controller {
 
     }
 
-
-
-    public void getGroups(Course c){
-        observableGroups.clear();
-        observableRecitations.clear();
+    public void getGroups(Course c, int recid, int userID){
         try{
-//            observableGroups.removeAll();
-//            observableRecitations.removeAll();
+            observableGroups.clear();
+            int uRecid = -1;
             Connection conn = null;
             String url = "jdbc:postgresql://localhost:5432/lab2";
-
-            // get the postgresql database connection
             conn = DriverManager.getConnection(url,"postgres", "password");
-            PreparedStatement st = conn.prepareStatement("SELECT courses.groups FROM courses WHERE courses.courseid = ?");
+
+            //GET UNIQUE RECITATION ID FROM SELECTION
+            PreparedStatement st = conn.prepareStatement("SELECT id FROM recitations WHERE courseid = ? AND recitationid = ?");
             st.setString(1, c.id);
+            st.setInt(2, recid);
             ResultSet rs = st.executeQuery();
-            groupBox.setDisable(false);
+            while(rs.next()){
+                uRecid = rs.getInt("id");
+                recitationid = uRecid;
+                System.out.println("RECIDUNI: " + uRecid);
+            }
+
+            //GET ALL GROUPS FOR THAT REC
+            st = conn.prepareStatement("SELECT courses.groups FROM courses WHERE courses.courseid = ?");
+            st.setString(1, c.id);
+            rs = st.executeQuery();
+
 
             while ( rs.next() )
             {
@@ -338,22 +390,64 @@ public class Controller {
                 }
             }
 
-            st = conn.prepareStatement("SELECT recitationid FROM recitations WHERE courseid = ?");
-            st.setString(1, c.id);
+            //SEE IF USER ALREADY HAS A GROUP FOR THAT RECITATION
+            st = conn.prepareStatement("SELECT groupid FROM tracks WHERE studentid = ? AND recitationid = ?");
+            st.setInt(1, userID);
+            st.setInt(2, uRecid);
             rs = st.executeQuery();
-            recitationBox.setDisable(false);
-            if (!rs.next()){
-
+            if ( rs.next() )
+            {
+                int groupid = rs.getInt("groupid");
+                System.out.println("GROUPID: " + groupid);
+                groupBox.getSelectionModel().select(groupid-1);
+                groupBox.setDisable(true);
+                shouldTrackBeWritten = false;
             }
+            else {
+                System.out.println("NO GROUP FOR THIS REC AND USER");
+                groupBox.setDisable(false);
+                shouldTrackBeWritten = true;
+            }
+            rs.close();
+            st.close();
+
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            System.exit(2);
+        }
+
+    }
+
+
+    public void getRecitations(Course c){
+        observableGroups.clear();
+        observableRecitations.clear();
+        problems.clear();
+        try{
+//            observableGroups.removeAll();
+//            observableRecitations.removeAll();
+            Connection conn = null;
+            String url = "jdbc:postgresql://localhost:5432/lab2";
+            conn = DriverManager.getConnection(url,"postgres", "password");
+
+            PreparedStatement st = conn.prepareStatement("SELECT recitationid FROM recitations WHERE courseid = ?");
+            st.setString(1, c.id);
+            ResultSet rs = st.executeQuery();
+            recitationBox.setDisable(false);
             while ( rs.next() )
             {
-                int id = Integer.parseInt(rs.getString("recitationid"));
+                int id = rs.getInt("recitationid");
+                System.out.println(id);
                 observableRecitations.add(id);
             }
 
 
             rs.close();
             st.close();
+
+
+
         }
         catch (Exception e){
             e.printStackTrace();

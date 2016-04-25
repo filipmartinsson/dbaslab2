@@ -28,11 +28,12 @@ public class Problem implements Comparable<Problem> {
         return this.masterproblemid;
     }
     public String toString(){
-        if(masterproblemid != -1){
-            return String.valueOf(problemid);
+        if(masterproblemid != 0){
+            System.out.println("MASTER: "+ masterproblemid);
+            return "SubProblem #" + String.valueOf(problemid);
         }
         else{
-            return "        " + String.valueOf(problemid);
+            return String.valueOf("Problem #" + problemid);
         }
 
     }

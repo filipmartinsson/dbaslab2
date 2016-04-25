@@ -45,6 +45,10 @@ public class Controller {
     private ObservableList<Problem> problems = FXCollections.observableArrayList();
     private ArrayList<Problem> solvedProblems = new ArrayList<Problem>();
 
+    private int studentid;
+    private int recitationid;
+    private int groupid =0;
+
     @FXML
     public void initialize() {
 
@@ -110,6 +114,55 @@ public class Controller {
             @Override
             public void handle(ActionEvent event) {
                 System.out.println("SUBMIT, BITCH");
+                try{
+                    Connection conn = null;
+                    String url = "jdbc:postgresql://localhost:5432/lab2";
+
+                    // get the postgresql database connection
+                    conn = DriverManager.getConnection(url,"postgres", "password");
+                    PreparedStatement st1 = conn.prepareStatement("INSERT INTO tracks VALUES(? , ?, ?)");
+
+                    st1.setInt(1, studentid);
+                    st1.setInt(2, recitationid);
+                    st1.setInt(3, groupid);
+
+                    ResultSet rs1 = st1.executeQuery();
+                    rs1.close();
+                    st1.close();
+
+                    //Loop with problems over SolvedProblems
+                    for (int i = 0; i < solvedProblems.size(); i++) {
+                        int probid = solvedProblems.get(i).getProblemId();
+                        int unid = solvedProblems.get(i).getUId();
+
+                        try{
+                            // get the postgresql database connection
+                            conn = DriverManager.getConnection(url,"postgres", "password");
+
+                            PreparedStatement st2 = conn.prepareStatement("INSERT INTO solved VALUES(?, ?)");
+                            st2.setInt(1, unid); //unid or probid???
+                            st2.setInt(2, studentid);
+
+                            ResultSet rs2 = st2.executeQuery();
+                            //ignore results...
+                            rs2.close();
+                            st2.close();
+                        }
+                        catch (Exception e){
+                            e.printStackTrace();
+                            System.exit(2);
+                        }
+                    }
+
+                }
+                catch (Exception e){
+                    e.printStackTrace();
+                    System.exit(2);
+                }
+
+
+
+
 
             }
         });
@@ -132,7 +185,9 @@ public class Controller {
             idButton.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
                 public void handle(ActionEvent event) {
+                    System.out.println(idField.getText());
                     getUser(idField.getText());
+
                 }
             });
 
@@ -186,6 +241,8 @@ public class Controller {
     }
 
     public void getProblems(int rid, String cid){
+
+        recitationid=rid;
 
         try{
             Connection conn = null;

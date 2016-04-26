@@ -115,6 +115,7 @@ public class Controller {
                         if(observableRecitations.size() > 0){
                             String cid = ((Course)courseBox.getSelectionModel().getSelectedItem()).id;
                             int recid = observableRecitations.get((Integer)new_value);
+                            recitationid = recid;
                             System.out.println(recid);
                             try{
 
@@ -366,20 +367,20 @@ public class Controller {
             conn = DriverManager.getConnection(url,"postgres", "password");
 
             //GET UNIQUE RECITATION ID FROM SELECTION
-            PreparedStatement st = conn.prepareStatement("SELECT id FROM recitations WHERE courseid = ? AND recitationid = ?");
-            st.setString(1, c.id);
-            st.setInt(2, recid);
-            ResultSet rs = st.executeQuery();
-            while(rs.next()){
-                uRecid = rs.getInt("id");
-                recitationid = uRecid;
-                System.out.println("RECIDUNI: " + uRecid);
-            }
+//            PreparedStatement st = conn.prepareStatement("SELECT id FROM recitations WHERE courseid = ? AND recitationid = ?");
+//            st.setString(1, c.id);
+//            st.setInt(2, recid);
+//            ResultSet rs = st.executeQuery();
+//            while(rs.next()){
+//                uRecid = rs.getInt("id");
+//                recitationid = uRecid;
+//                System.out.println("RECIDUNI: " + uRecid);
+//            }
 
             //GET ALL GROUPS FOR THAT REC
-            st = conn.prepareStatement("SELECT courses.groups FROM courses WHERE courses.courseid = ?");
+            PreparedStatement st = conn.prepareStatement("SELECT courses.groups FROM courses WHERE courses.courseid = ?");
             st.setString(1, c.id);
-            rs = st.executeQuery();
+            ResultSet rs = st.executeQuery();
 
 
             while ( rs.next() )
@@ -431,7 +432,7 @@ public class Controller {
             String url = "jdbc:postgresql://localhost:5432/lab2";
             conn = DriverManager.getConnection(url,"postgres", "password");
 
-            PreparedStatement st = conn.prepareStatement("SELECT recitationid FROM recitations WHERE courseid = ?");
+            PreparedStatement st = conn.prepareStatement("SELECT DISTINCT recitationid FROM recitations WHERE courseid = ?");
             st.setString(1, c.id);
             ResultSet rs = st.executeQuery();
             recitationBox.setDisable(false);

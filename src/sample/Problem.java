@@ -15,6 +15,7 @@ public class Problem implements Comparable<Problem> {
         this.problemid = problemid;
         this.masterproblemid = masterproblemid;
         this.courseId = courseId;
+        this.rid = rid;
     }
     public int getProblemId(){
         return this.problemid;
@@ -39,12 +40,15 @@ public class Problem implements Comparable<Problem> {
     }
     @Override
     public int compareTo(Problem otherproblem) {
-        if(problemid < otherproblem.problemid) {
+
+            if (problemid > otherproblem.problemid) {
+                return 1;
+            } else if (uId == otherproblem.uId) {
+                return 0;
+            }
             return -1;
-        }else if (uId==otherproblem.uId){
-            return 0;
-        }
-        return 1;
+
+
     }
 }
 

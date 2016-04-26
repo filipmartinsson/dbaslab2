@@ -249,7 +249,7 @@ public class Controller {
         else if(wasSelected && !isSelected){
             solvedProblems.remove(p);
         }
-        System.out.println(solvedProblems.size());
+//        System.out.println(solvedProblems.size());
     }
 
     public void getUser(String id){
@@ -293,6 +293,8 @@ public class Controller {
         try{
             Connection conn = null;
             ArrayList<Problem> rawList = new ArrayList<Problem>();
+            ArrayList<Problem> fList = new ArrayList<Problem>();
+            ArrayList<Problem> sList = new ArrayList<Problem>();
             String url = "jdbc:postgresql://localhost:5432/lab2";
             conn = DriverManager.getConnection(url,"postgres", "password");
 
@@ -306,9 +308,11 @@ public class Controller {
                 try{
                     mid = rs.getInt("masterproblemid");
                 }catch (Exception e){
-                    mid=-1;
+                    mid=0;
                 }
-                System.out.println(String.valueOf(rs.getInt("problemid")));
+//                System.out.println("Masterid");
+//                System.out.println(mid);
+//                System.out.println(String.valueOf(rs.getInt("problemid")));
                 rawList.add(new Problem(rs.getInt("id"),rs.getInt("problemid"), mid, cid, rid));
 
             }
@@ -319,18 +323,24 @@ public class Controller {
             Collections.sort(rawList);
 
             for (int i = 0; i < rawList.size(); i++) {
-                int pid = rawList.get(i).getProblemId();
-                int uid = rawList.get(i).getUId();
-                String courseId = rawList.get(i).getCourseId();
-
-                System.out.println(pid);
-                problems.add(rawList.get(i));
-                for (int i2 = 0; i2 < rawList.size(); i2++) {
-                    if(pid==rawList.get(i2).getMasterProblem()){
-                        problems.add(rawList.get(i2));
+                if(rawList.get(i).getMasterProblem() == 0) {
+                    fList.add(rawList.get(i));
+                } else {
+                    sList.add(rawList.get(i));
+                }
+            }
+            Collections.sort(fList);
+            Collections.sort(sList);
+            for (int i = 0; i < fList.size(); i++) {
+                Problem pr = fList.get(i);
+                problems.add(pr);
+                for (int i2 = 0; i2 < sList.size(); i2++) {
+                    if(sList.get(i2).getMasterProblem() == pr.getUId()) {
+                        problems.add(sList.get(i2));
                     }
                 }
             }
+
 
             problemView.setItems(problems);
 
